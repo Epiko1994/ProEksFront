@@ -14,10 +14,13 @@ import './App.css';
 import facade from "./apiFacade";
 import settings from "./settings"
 
-function App(props) {
+function App() {
+
+  const {getRecipes} = RecipeFactory;
 
   const [isLoggedIn, setIsLoggedIn] = useState(facade.loggedIn);
   let history = useHistory();
+
 
   const setLoginStatus = status => {
     setIsLoggedIn(status);
@@ -36,7 +39,7 @@ function App(props) {
             <Home />
           </Route>
           <Route path="/recipe">
-            <Recipe />
+            <RecipeFactory getRecipes={getRecipes} />
           </Route>
           <Route path="/user">
           <User role = "user"/>
@@ -55,6 +58,26 @@ function App(props) {
       </div>
     </Router>
   );
+}
+
+function RecipeFactory() {
+  let recipes = [{id: 1, title: "Slow cooker spicy chicken and bean soup"},
+                  {id: 2, title: "Slow cooker beef stew"},
+                  {id: 3, title: "Smoked paprika goulash for the slow cooker"},
+                  {id: 4, title: "Pistachio chicken with pomegranate sauce"},
+                  {id: 5, title: "Cheesy leek and mustard soup"},
+                  {id: 6, title: "Christmas Stollen"},
+                  {id: 7, title: "Polly's eccles cakes"},
+                  {id: 8, title: "Braised beef in red wine"},
+                  {id: 9, title: "Moist garlic roasted chicken"},
+                  {id: 10, title: "Cheese and bacon stuffed pasta shells"},
+                  {id: 11, title: "Tofu vindaloo"}];
+    
+    let nextId = 12;
+    
+    const getRecipes = () => {
+      return recipes;
+    }
 }
 
 function Header({ isLoggedIn, loginMsg }) {
@@ -113,34 +136,42 @@ function Home() {
   );
 }
 
+
+
 function Recipe() {
   const [recipeData, setRecipeData] = useState("Loading...");
 
-  var opts = {
-    headers: {
-      "Content-type": "application/json",
-      'Accept': 'application/json',
-    }
+   const RecipeData = () => {
+    
+    //let recipeArr = JSON.parse(recipeData);
+    let recipeArr = recipeData;
+
+    let frag = document.createDocumentFragment();
+
+      for (let index = 0; index < recipeArr.length; index++) {
+        let tr = document.createElement("tr");
+        tr.innerHTML = recipeArr[index];
+        frag.appendChild(tr);
+      }
+      return frag;
   }
 
-  fetch(settings.getURL("recipeUrl"))
-  .then(res=> res.json())
-  .then(data => setRecipeData(data).map(recipe))
+  fetch(settings.getURL("recipeUrl"), {
+    merthod: 'get',
+    headers: new Headers({
+      'Content-Type': 'application/json'
+    })
+  })
+  .then(res => res.json())
+  .then(data => setRecipeData(JSON.stringify(data)))
   .catch(err => setRecipeData("Loading failed."));
-
-  const recipes = {recipeData};
-  const listRecipes = recipes.map((recipe) => 
-    <li> {recipe} </li>
-  );
 
   return (
     <div className="row">
       <div className="col-12">
-      <h2>recipes: </h2>
-      <table>
-        <tr>
-          <p>{listRecipes}</p>
-        </tr>
+      <h2>This is the data:</h2>
+      <table id="recipelist">
+          
       </table>
       </div>
     </div>
