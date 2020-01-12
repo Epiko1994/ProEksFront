@@ -15,7 +15,6 @@ import facade from "./apiFacade";
 import settings from "./settings"
 
 function App(props) {
-  const { bookFactory } = props;
 
   const [isLoggedIn, setIsLoggedIn] = useState(facade.loggedIn);
   let history = useHistory();
@@ -36,14 +35,11 @@ function App(props) {
           <Route exact path="/">
             <Home />
           </Route>
-          <Route path="/swapi">
-            <Swapi />
+          <Route path="/recipe">
+            <Recipe />
           </Route>
           <Route path="/user">
           <User role = "user"/>
-          </Route>
-          <Route path="/admin">
-            <User role = "admin"/>
           </Route>
           <Route path="/login">
             <LoginHandler
@@ -69,7 +65,7 @@ function Header({ isLoggedIn, loginMsg }) {
     >
       <div className="container">
         <a className="navbar-brand text-white">
-          JJU Group
+          ProEks
           </a>
         <button
           className="navbar-toggler"
@@ -87,13 +83,10 @@ function Header({ isLoggedIn, loginMsg }) {
             <li className="nav-item">
               <NavLink className="nav-link" exact to="/">Home</NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink exact className="nav-link" exact to="/swapi">Swapi</NavLink>
-            </li>
             {isLoggedIn && (
               <React.Fragment>
+                <li className="nav-item"><NavLink className="nav-link" exact to="/recipe">Recipe</NavLink></li>
                 <li className="nav-item"><NavLink className="nav-link" exact to="/user">User</NavLink></li>
-                <li className="nav-item"><NavLink className="nav-link" exact to="/admin">Admin</NavLink></li>
               </React.Fragment>
             )}
           </ul>
@@ -108,21 +101,20 @@ function Header({ isLoggedIn, loginMsg }) {
   );
 }
 
-
 function Home() {
   return (
     <div className="row">
       <div className="col-lg-12 text-center">
-        <h1 className="mt-5">Cphbusiness KA3</h1>
-        <p className="lead">By: Jeppe, Joshua & Ulrik</p>
+        <h1 className="mt-5">Programmerings Eksamen</h1>
+        <p className="lead">By: Joshua Joshansen</p>
 
       </div>
     </div>
   );
 }
 
-function Swapi() {
-  const [swapiData, setSwapiData] = useState("Loading...");
+function Recipe() {
+  const [recipeData, setRecipeData] = useState("Loading...");
 
   var opts = {
     headers: {
@@ -131,37 +123,105 @@ function Swapi() {
     }
   }
 
-  fetch(settings.getURL("swapiUrl"))
+  fetch(settings.getURL("recipeUrl"))
   .then(res=> res.json())
-  .then(data => setSwapiData(data))
-  .catch(err => setSwapiData("Loading failed."));
+  .then(data => setRecipeData(data).map(recipe))
+  .catch(err => setRecipeData("Loading failed."));
+
+  const recipes = {recipeData};
+  const listRecipes = recipes.map((recipe) => 
+    <li> {recipe} </li>
+  );
 
   return (
     <div className="row">
       <div className="col-12">
-      <h2>This is the data:</h2>
-      <p>{swapiData}</p>
+      <h2>recipes: </h2>
+      <table>
+        <tr>
+          <p>{listRecipes}</p>
+        </tr>
+      </table>
       </div>
     </div>
   );
 }
 
+/*function recipeFactory() {
+  const [recipeData, setRecipeData] = useState("Loading...");
+
+  fetch(settings.getURL("recipeUrl"))
+  .then(res=> res.json())
+  .then(data => setRecipeData(data))
+  .catch(err => setRecipeData("Loading failed."));
+
+  const addRecipe = ({recipeData}) => {
+    if ({recipeData}.id === "") {
+      {recipeData}recipe.id = nextId;
+      recipe.push()
+    }
+  }
+}*/
+
+
 
 function User({role}) {
   const [userData, setUserData] = useState("Loading...");
+  const [recipeData, setRecipeData] = useState("Loading...");
+  const [table, setTable] = useState(recipeData);
 
   var opts = facade.makeOptions("GET",true)
+
 
   fetch(settings.getURL("userUrl") + role ,opts)
   .then(res=> res.json())
   .then(data => setUserData(data.message))
   .catch(err => setUserData("Loading failed."));
 
+  fetch(settings.getURL("recipeUrl"))
+  .then(res=> res.json())
+  .then(data => {
+    setRecipeData(data)
+    setTable(mapper(data))
+  })
+  .catch(err => setRecipeData("Loading failed."));
+
+  const SearchRecipe = (urlend) =>{
+    fetch(settings.getURL("recipeUrl") + urlend)
+    .then(res => res.json())
+    .then((data) => {
+      setRecipeData(data)
+    })
+  }
+
+  const mapper = (array) => {
+    return array.map((r) => {
+      return <tr key={r.id}><th> {r.id} </th>
+        <td> {r.description} </td>
+      </tr>
+    })
+  }
+
+  const RecipeSearchForm = () => {
+    const [recipe, setRecipe] = useState("");
+
+    return(
+      <div>
+        <span>søg efter en person</span>
+        <input type="text" onChange={(event)=>setRecipe(event.target.value)} value={recipe} />
+        <button type="button" onClick={() => recipe == '' ? alert("Søg venligst efter en person") : SearchRecipe('name/' + recipe)}>Search</button> 
+      </div>
+    );
+  }
+
   return (
     <div className="row">
       <div className="col-12">
       <h2>This is the data:</h2>
       <p>{userData}</p>
+      <RecipeSearchForm />
+      <p>{table}</p>
+      
       </div>
     </div>
   );
@@ -178,18 +238,6 @@ function AddBook({ bookFactory }) {
       <button onClick={() => bookFactory.addBook({ title: bookTitle, info: bookInfo })}>Save</button>
       <p>{bookTitle}</p>
       <p>{bookInfo}</p>
-    </div>
-  );
-}
-
-function Login({ isLoggedIn, loginMsg, setLoginStatus }) {
-  const BtnClick = () => {
-    setLoginStatus(!isLoggedIn);
-  };
-  return (
-    <div>
-      <h2>{loginMsg}</h2>
-      <button onClick={BtnClick}>{loginMsg}</button>
     </div>
   );
 }
