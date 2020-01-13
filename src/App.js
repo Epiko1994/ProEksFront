@@ -12,11 +12,11 @@ import {
 } from "react-router-dom";
 import './App.css';
 import facade from "./apiFacade";
-import settings from "./settings"
+import settings from "./settings";
 
-function App() {
+function App(props) {
 
-  const {getRecipes} = RecipeFactory;
+  //const {getRecipes} = props;
 
   const [isLoggedIn, setIsLoggedIn] = useState(facade.loggedIn);
   let history = useHistory();
@@ -39,7 +39,7 @@ function App() {
             <Home />
           </Route>
           <Route path="/recipe">
-            <RecipeFactory getRecipes={getRecipes} />
+            <Recipe />
           </Route>
           <Route path="/user">
           <User role = "user"/>
@@ -60,7 +60,7 @@ function App() {
   );
 }
 
-function RecipeFactory() {
+/*function RecipeFactory() {
   let recipes = [{id: 1, title: "Slow cooker spicy chicken and bean soup"},
                   {id: 2, title: "Slow cooker beef stew"},
                   {id: 3, title: "Smoked paprika goulash for the slow cooker"},
@@ -78,7 +78,7 @@ function RecipeFactory() {
     const getRecipes = () => {
       return recipes;
     }
-}
+}*/
 
 function Header({ isLoggedIn, loginMsg }) {
   return (
@@ -106,9 +106,9 @@ function Header({ isLoggedIn, loginMsg }) {
             <li className="nav-item">
               <NavLink className="nav-link" exact to="/">Home</NavLink>
             </li>
+            <li className="nav-item"><NavLink className="nav-link" exact to="/recipe">Recipe</NavLink></li>
             {isLoggedIn && (
               <React.Fragment>
-                <li className="nav-item"><NavLink className="nav-link" exact to="/recipe">Recipe</NavLink></li>
                 <li className="nav-item"><NavLink className="nav-link" exact to="/user">User</NavLink></li>
               </React.Fragment>
             )}
@@ -141,7 +141,7 @@ function Home() {
 function Recipe() {
   const [recipeData, setRecipeData] = useState("Loading...");
 
-   const RecipeData = () => {
+  /*const RecipeData = () => {
     
     //let recipeArr = JSON.parse(recipeData);
     let recipeArr = recipeData;
@@ -154,13 +154,20 @@ function Recipe() {
         frag.appendChild(tr);
       }
       return frag;
+  }*/
+
+  var opts = {
+    headers: {
+      "Content-type": "application/json",
+      'Accept': 'application/json',
+    }
   }
 
   fetch(settings.getURL("recipeUrl"), {
-    merthod: 'get',
-    headers: new Headers({
+    method: 'get',
+    headers: {
       'Content-Type': 'application/json'
-    })
+    }
   })
   .then(res => res.json())
   .then(data => setRecipeData(JSON.stringify(data)))
@@ -171,7 +178,7 @@ function Recipe() {
       <div className="col-12">
       <h2>This is the data:</h2>
       <table id="recipelist">
-          
+          {recipeData}
       </table>
       </div>
     </div>
@@ -258,17 +265,14 @@ function User({role}) {
   );
 }
 
-function AddBook({ bookFactory }) {
-  const [bookTitle, changeBookTitle] = useState("");
-  const [bookInfo, changeBookInfo] = useState("");
+function Login({ isLoggedIn, loginMsg, setLoginStatus }) {
+  const BtnClick = () => {
+    setLoginStatus(!isLoggedIn);
+  };
   return (
     <div>
-      <h2>Add book</h2>
-      Title: <input type="text" onChange={(event) => changeBookTitle(event.target.value)} value={bookTitle} /><br />
-      Info: <input type="text" onChange={(event) => changeBookInfo(event.target.value)} value={bookInfo} /><br />
-      <button onClick={() => bookFactory.addBook({ title: bookTitle, info: bookInfo })}>Save</button>
-      <p>{bookTitle}</p>
-      <p>{bookInfo}</p>
+      <h2>{loginMsg}</h2>
+      <button onClick={BtnClick}>{loginMsg}</button>
     </div>
   );
 }
